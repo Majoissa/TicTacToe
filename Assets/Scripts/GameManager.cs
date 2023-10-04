@@ -14,13 +14,15 @@ public class GameManager : MonoBehaviour
     // Start is called before the first frame update
     public AudioClip clipWin;
     public AudioClip clipDraw;
+    private bool modeAI;
     void Start()
     {
         ChangeTurn();
         restartButton.SetActive(false);
         backToMenuButton.SetActive(false);
         int flag = PlayerPrefs.GetInt("AI", 1);
-        Debug.Log("FLAG: "+ flag );
+        modeAI = flag == 1;
+        
     }
 
     // Suponiendo que las cells se disponen de la siguiente forma:
@@ -35,12 +37,12 @@ public class GameManager : MonoBehaviour
         // Revisa las filas
         for (int i = 0; i < 9; i += 3)
         {
-            if (cells[i].status != 0 && cells[i].status == cells[i + 1].status && cells[i + 1].status == cells[i + 2].status)
+            if (cells[i].status != CellType.EMPTY && cells[i].status == cells[i + 1].status && cells[i + 1].status == cells[i + 2].status)
             {
                 DeclareWinner(cells[i].status);
                 return;
             }
-            if (cells[i].status == 0 || cells[i + 1].status == 0 || cells[i + 2].status == 0) isDraw = false;
+            if (cells[i].status == CellType.EMPTY || cells[i + 1].status == CellType.EMPTY || cells[i + 2].status == CellType.EMPTY) isDraw = false;
         }
 
         // Revisa las columnas
@@ -88,9 +90,9 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    void DeclareWinner(int status)
+    void DeclareWinner(CellType status)
     {
-        if (status == 1)
+        if (status == CellType.SPHERE)
         {
             label.text = "Sphere is the winner";   
         }
@@ -108,6 +110,18 @@ public class GameManager : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        if (modeAI && isCubeTurn)
+        {
+            Debug.Log("toca a la IA");
+            foreach (Cell cell in cells)
+            {
+                if (cell.status == CellType.EMPTY)
+                {
+                    cell.onClick();
+                    break;
+                }
+            }
+        }
     }
 
     public void RestartGame()

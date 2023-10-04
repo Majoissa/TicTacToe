@@ -2,9 +2,15 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+public enum CellType
+{
+    EMPTY,
+    SPHERE,
+    CUBE
+}
 public class Cell : MonoBehaviour
 {
-    public int status; //0: none, 1:sphere, 2:cube
+    public CellType status;
     public GameManager gameManger;
     public GameObject sphere;
     public GameObject cube;
@@ -13,7 +19,7 @@ public class Cell : MonoBehaviour
     {
         sphere.SetActive(false);
         cube.SetActive(false);
-        status = 0;
+        status = CellType.EMPTY;
     }
 
     // Update is called once per frame
@@ -24,6 +30,12 @@ public class Cell : MonoBehaviour
     
     void OnMouseDown()
     {
+        onClick();
+    }
+
+    public void onClick()
+    {
+        Debug.Log("Entrant a onclick");
         if (cube.activeSelf==true ||  sphere.activeSelf == true)
         {
             //nos vamos si cubo y sphere activos
@@ -33,14 +45,15 @@ public class Cell : MonoBehaviour
         
         if (gameManger.isCubeTurn == true)
         {
-            status = 2;
+            Debug.Log("Entrant a onclick iscubeturn");
+            status = CellType.CUBE;
             cube.SetActive(true);
             sphere.SetActive(false);
             gameManger.ChangeTurn();
         }
         else
         {
-            status = 1;
+            status = CellType.SPHERE;
             sphere.SetActive(true);    
             cube.SetActive(false);
             gameManger.ChangeTurn();

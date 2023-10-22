@@ -8,27 +8,49 @@ public class GameManager : MonoBehaviour
 {
     public bool isCubeTurn = true;
     public TextMeshProUGUI label;
+    public TextMeshProUGUI cruces;
+    public TextMeshProUGUI sferas;
+    public GameObject cruz;
+    public GameObject sfera;
     public Cell[] cells;
     public GameObject restartButton;
     public GameObject backToMenuButton;
-    // Start is called before the first frame update
     public AudioClip clipWin;
     public AudioClip clipDraw;
     private bool modeAI;
+    private bool isAIThinking = false;
+    public bool gameEnd = false;
+
     void Start()
     {
-        ChangeTurn();
-        restartButton.SetActive(false);
-        backToMenuButton.SetActive(false);
         int flag = PlayerPrefs.GetInt("AI", 1);
         modeAI = flag == 1;
-        
+
+        if (modeAI)
+        {
+            cruces.text = "x = Jugador local";
+            sferas.text = "o = Tú";
+            sfera.SetActive(true);
+            cruz.SetActive(true);
+            label.text = "Es tu turno";
+        }
+        else
+        {
+            sfera.SetActive(false);
+            cruz.SetActive(false);
+            ChangeTurn();
+        }
+
+        restartButton.SetActive(false);
+        backToMenuButton.SetActive(false);
+
+        // Inicio la IA desde el principio si está habilitada
+        if (modeAI && isCubeTurn)
+        {
+            StartCoroutine(SimulateAITurn());
+        }
     }
 
-    // Suponiendo que las cells se disponen de la siguiente forma:
-    // 0 | 1 | 2
-    // 3 | 4 | 5
-    // 6 | 7 | 8
 
     public void CheckWinner()
     {
@@ -48,7 +70,7 @@ public class GameManager : MonoBehaviour
         // Revisa las columnas
         for (int i = 0; i < 3; i++)
         {
-            if (cells[i].status != 0 && cells[i].status == cells[i + 3].status && cells[i + 3].status == cells[i + 6].status)
+            if (cells[i].status != CellType.EMPTY && cells[i].status == cells[i + 3].status && cells[i + 3].status == cells[i + 6].status)
             {
                 DeclareWinner(cells[i].status);
                 return;
@@ -56,13 +78,13 @@ public class GameManager : MonoBehaviour
         }
 
         // Revisa las diagonales
-        if (cells[0].status != 0 && cells[0].status == cells[4].status && cells[4].status == cells[8].status)
+        if (cells[0].status != CellType.EMPTY && cells[0].status == cells[4].status && cells[4].status == cells[8].status)
         {
             DeclareWinner(cells[0].status);
             return;
         }
 
-        if (cells[2].status != 0 && cells[2].status == cells[4].status && cells[4].status == cells[6].status)
+        if (cells[2].status != CellType.EMPTY && cells[2].status == cells[4].status && cells[4].status == cells[6].status)
         {
             DeclareWinner(cells[2].status);
             return;
@@ -71,22 +93,43 @@ public class GameManager : MonoBehaviour
         // Si todas las celdas están llenas y no hay ganador, entonces es un empate.
         if (isDraw)
         {
-            label.text = "It's a draw!";
+            label.text = "¡Es un empate!";
             SetupGameFinished(false);
-            
+            gameEnd = true;
         }
     }
 
     public void ChangeTurn()
     {
         isCubeTurn = !isCubeTurn;
-        if (isCubeTurn)
+        if (modeAI)
         {
-            label.text = "Cube's turn...";   
+            if (isCubeTurn)
+            {
+                label.text = "Es el turno del jugador local";
+            }
+            else
+            {
+                label.text = "Es tu turno";
+            }
         }
         else
         {
-            label.text = "Sphere's turn...";   
+            if (isCubeTurn)
+            {
+                label.text = "Es el turno de las cruces";
+            }
+            else
+            {
+                label.text = "Es el turno de las esferas";
+            }
+        }
+
+        // Verificar si es el turno de la IA y la IA no está pensando
+        if (modeAI && isCubeTurn && !isAIThinking)
+        {
+            Debug.Log("Turno de la IA");
+            StartCoroutine(SimulateAITurn());
         }
     }
 
@@ -94,35 +137,42 @@ public class GameManager : MonoBehaviour
     {
         if (status == CellType.SPHERE)
         {
-            label.text = "Sphere is the winner";   
+            label.text = "Ganan las esferas!";
         }
         else
         {
-            label.text = "Cube is the winner";   
+            label.text = "Ganan las cruces!";
         }
 
         SetupGameFinished(true);
-        
+        gameEnd = true;
     }
-
-    
-    
-    // Update is called once per frame
-    void Update()
+    IEnumerator SimulateAITurn()
     {
-        if (modeAI && isCubeTurn)
+        isAIThinking = true;
+
+        yield return new WaitForSeconds(3f);
+
+        List<Cell> emptyCells = new List<Cell>();
+
+        foreach (Cell cell in cells)
         {
-            Debug.Log("toca a la IA");
-            foreach (Cell cell in cells)
+            if (cell.status == CellType.EMPTY)
             {
-                if (cell.status == CellType.EMPTY)
-                {
-                    cell.onClick();
-                    break;
-                }
+                emptyCells.Add(cell);
             }
         }
+
+        if (emptyCells.Count > 0)
+        {
+            int randomIndex = Random.Range(0, emptyCells.Count);
+            Cell randomCell = emptyCells[randomIndex];
+            randomCell.onClick();
+        }
+
+        isAIThinking = false;
     }
+
 
     public void RestartGame()
     {
@@ -145,8 +195,7 @@ public class GameManager : MonoBehaviour
         }
         else
         {
-            GetComponent<AudioSource>().PlayOneShot(clipDraw);    
+            GetComponent<AudioSource>().PlayOneShot(clipDraw);
         }
-        
     }
 }

@@ -25,9 +25,9 @@ public class Cell : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        
+
     }
-    
+
     void OnMouseDown()
     {
         onClick();
@@ -36,13 +36,19 @@ public class Cell : MonoBehaviour
     public void onClick()
     {
         Debug.Log("Entrant a onclick");
-        if (cube.activeSelf==true ||  sphere.activeSelf == true)
+
+        if (cube.activeSelf == true || sphere.activeSelf == true)
         {
-            //nos vamos si cubo y sphere activos
-            Debug.Log("Eips que la cel·la ja està clicada");
+            //nos vamos si cubo y sphere estan activos
+            Debug.Log("Esta celda ya esta clickeada");
             return;
         }
-        
+
+        if (gameManger.gameEnd)
+        {
+            return;
+        }
+
         if (gameManger.isCubeTurn == true)
         {
             Debug.Log("Entrant a onclick iscubeturn");
@@ -54,11 +60,11 @@ public class Cell : MonoBehaviour
         else
         {
             status = CellType.SPHERE;
-            sphere.SetActive(true);    
+            sphere.SetActive(true);
             cube.SetActive(false);
             gameManger.ChangeTurn();
         }
-        
+
         gameManger.CheckWinner();
     }
 }
